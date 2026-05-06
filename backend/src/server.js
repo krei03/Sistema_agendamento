@@ -11,8 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use('/screens', express.static(path.join(__dirname, '..', 'screens')));
+app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
+app.use('/screens', express.static(path.join(__dirname, '..', '..', 'frontend', 'screens')));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

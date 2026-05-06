@@ -96,7 +96,15 @@ async function main() {
   });
   assert(appointment.appointment.id, 'Agendamento nao retornou id.');
 
-  const appointments = await request('/api/barber/appointments', { headers: authHeader });
+  const adminLogin = await request('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+  });
+  assert(adminLogin.token, 'Login do barbeiro admin nao retornou token.');
+
+  const appointments = await request('/api/barber/appointments', {
+    headers: { Authorization: `Bearer ${adminLogin.token}` }
+  });
   assert(appointments.appointments.length > 0, 'Dashboard nao lista agendamentos.');
 
   console.log('Validacao funcional concluida com sucesso.');

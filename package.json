@@ -2,12 +2,12 @@
   "name": "sistema-agendamento-barbeiro",
   "version": "1.0.0",
   "description": "Sistema web simples para agenda de barbearia com Node.js, Express, MySQL e JavaScript Vanilla.",
-  "main": "src/server.js",
+  "main": "backend/src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
-    "init-db": "node scripts/init-db.js",
-    "validate": "node scripts/validate-api.js"
+    "start": "node backend/src/server.js",
+    "dev": "node backend/src/server.js",
+    "init-db": "node backend/scripts/init-db.js",
+    "validate": "node backend/scripts/validate-api.js"
   },
   "keywords": [
     "barbearia",

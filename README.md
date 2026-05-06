@@ -1,6 +1,14 @@
-npm# Sistema de Agendamento para Barbearia
+# Sistema de Agendamento para Barbearia
 
 Aplicacao web simples para uma barbearia, com landing page publica para solicitacao de horarios e area administrativa protegida para o barbeiro acompanhar agenda e editar seus dados.
+
+## Estrutura
+
+- `backend/src`: servidor Express, configuracao, autenticacao e rotas.
+- `backend/scripts`: scripts de inicializacao e validacao funcional.
+- `backend/database`: schema SQL idempotente e seeds.
+- `frontend/public`: paginas, estilos e JavaScript Vanilla.
+- `frontend/screens`: imagens usadas como referencia/ativo visual da landing.
 
 ## Stack
 
@@ -17,7 +25,12 @@ Aplicacao web simples para uma barbearia, com landing page publica para solicita
 docker compose up --build
 ```
 
-Depois acesse:
+O Compose sobe dois servicos:
+
+- `mysql`: MySQL 8.4 com banco `barber_schedule`.
+- `app`: Node.js na porta `3000`, executando `npm run init-db` antes de iniciar o servidor.
+
+Depois acesse no navegador:
 
 - Landing page: http://localhost:3000
 - Login admin: http://localhost:3000/login.html
@@ -28,6 +41,19 @@ Credenciais iniciais criadas pelo seed:
 
 - Usuario: `admin`
 - Senha: `admin123`
+
+Para parar:
+
+```bash
+docker compose down
+```
+
+Para reiniciar o banco do zero, removendo o volume:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
 
 ## Rodando localmente
 
@@ -87,4 +113,6 @@ O script valida:
 
 ## Observacoes
 
-O schema fica em `database/schema.sql` e pode ser aplicado varias vezes com `npm run init-db`. Os seeds sao idempotentes para servicos e usuario admin.
+O schema fica em `backend/database/schema.sql` e pode ser aplicado varias vezes com `npm run init-db`. Os seeds sao idempotentes para servicos e usuario admin.
+
+As paginas do frontend ficam em `frontend/public`, mas sao servidas pelo Express diretamente na raiz do site. Por exemplo, `frontend/public/login.html` abre em `/login.html`.

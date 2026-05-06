@@ -2,12 +2,15 @@ const state = {
   services: [],
   selectedService: null,
   selectedDate: null,
-  selectedSlot: null
+  selectedSlot: null,
+  visibleMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 };
 
 const servicesList = document.querySelector('#servicesList');
 const calendarGrid = document.querySelector('#calendarGrid');
 const monthLabel = document.querySelector('#monthLabel');
+const prevMonth = document.querySelector('#prevMonth');
+const nextMonth = document.querySelector('#nextMonth');
 const slotsGrid = document.querySelector('#slotsGrid');
 const selectedSummary = document.querySelector('#selectedSummary');
 const bookingMessage = document.querySelector('#bookingMessage');
@@ -18,7 +21,15 @@ function currency(cents) {
 }
 
 function isoDate(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function displayDate(value) {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Intl.DateTimeFormat('pt-BR').format(new Date(year, month - 1, day));
 }
 
 function setMessage(text, type = 'error') {
@@ -40,9 +51,9 @@ function renderServices() {
 
 function renderCalendar() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const today = new Date(year, month, now.getDate());
+  const year = state.visibleMonth.getFullYear();
+  const month = state.visibleMonth.getMonth();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
   const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
@@ -50,7 +61,9 @@ function renderCalendar() {
   monthLabel.textContent = new Intl.DateTimeFormat('pt-BR', {
     month: 'long',
     year: 'numeric'
-  }).format(now);
+  }).format(state.visibleMonth);
+
+  prevMonth.disabled = first <= new Date(today.getFullYear(), today.getMonth(), 1);
 
   const cells = names.map((name) => `<div class="day-name">${name}</div>`);
   for (let index = 0; index < first.getDay(); index += 1) {
@@ -83,7 +96,7 @@ function renderSlots(slots = []) {
     return;
   }
 
-  selectedSummary.textContent = `${state.selectedService.name} em ${state.selectedDate}`;
+  selectedSummary.textContent = `${state.selectedService.name} em ${displayDate(state.selectedDate)}`;
   slotsGrid.innerHTML = slots.length
     ? slots.map((slot) => `<button class="slot-button ${state.selectedSlot === slot ? 'active' : ''}" data-slot="${slot}" type="button">${slot}</button>`).join('')
     : '<p class="muted mb-0">Nenhum horario disponivel para esta data.</p>';
@@ -122,6 +135,16 @@ calendarGrid.addEventListener('click', async (event) => {
   state.selectedDate = button.dataset.date;
   renderCalendar();
   await loadAvailability();
+});
+
+prevMonth.addEventListener('click', () => {
+  state.visibleMonth = new Date(state.visibleMonth.getFullYear(), state.visibleMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+
+nextMonth.addEventListener('click', () => {
+  state.visibleMonth = new Date(state.visibleMonth.getFullYear(), state.visibleMonth.getMonth() + 1, 1);
+  renderCalendar();
 });
 
 slotsGrid.addEventListener('click', (event) => {

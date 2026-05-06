@@ -15,13 +15,7 @@
     </nav>
 
     <main>
-      <section class="hero">
-        <div class="hero-content">
-          <h1 class="display-font">Vieira Barbearia</h1>
-          <p>Cuidados premium para o homem moderno. Agende seu horario hoje mesmo.</p>
-          <a class="btn btn-orange btn-lg px-5 py-3" href="#agenda"><i class="bi bi-calendar-event me-3"></i>Agendar Agora</a>
-        </div>
-      </section>
+      <section class="hero" aria-label="Vieira Barbearia"></section>
 
       <section id="agenda" class="section-pad">
         <p class="text-center fs-3 fw-bold mb-5">Selecione o servico, data e horario de sua preferencia</p>
@@ -32,9 +26,17 @@
           </div>
 
           <div>
-            <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="calendar-heading d-flex align-items-center justify-content-between gap-3 mb-4">
               <h2 class="display-font section-title mb-0">Escolha a data</h2>
-              <strong id="monthLabel" class="fs-4"></strong>
+              <div class="calendar-nav">
+                <button class="icon-button" id="prevMonth" type="button" aria-label="Mes anterior" title="Mes anterior">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <strong id="monthLabel" class="month-label"></strong>
+                <button class="icon-button" id="nextMonth" type="button" aria-label="Proximo mes" title="Proximo mes">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
             </div>
             <div class="calendar-grid mb-5" id="calendarGrid"></div>
             <div class="panel p-4">

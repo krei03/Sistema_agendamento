@@ -73,32 +73,11 @@ a {
 }
 
 .hero {
-  min-height: 78vh;
-  display: grid;
-  place-items: center;
+  min-height: 62vh;
   padding: 120px 20px 80px;
   background:
-    linear-gradient(90deg, rgba(10, 10, 10, 0.64), rgba(10, 10, 10, 0.34)),
+    linear-gradient(90deg, rgba(10, 10, 10, 0.34), rgba(10, 10, 10, 0.08)),
     url("/screens/home.png") center top / cover no-repeat;
-}
-
-.hero-content {
-  width: min(1120px, 100%);
-  text-align: center;
-}
-
-.hero h1 {
-  font-size: clamp(3.4rem, 8vw, 7.5rem);
-  line-height: 0.9;
-  margin: 0 0 28px;
-  text-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
-}
-
-.hero p {
-  max-width: 940px;
-  margin: 0 auto 38px;
-  font-size: clamp(1.2rem, 2.2vw, 2.2rem);
-  font-weight: 700;
 }
 
 .section-pad {
@@ -164,6 +143,44 @@ a {
   display: grid;
   grid-template-columns: repeat(7, minmax(38px, 1fr));
   gap: 12px;
+}
+
+.calendar-heading {
+  flex-wrap: wrap;
+}
+
+.calendar-nav {
+  display: inline-grid;
+  grid-template-columns: 44px minmax(170px, auto) 44px;
+  align-items: center;
+  gap: 10px;
+}
+
+.month-label {
+  font-size: 1.2rem;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #111;
+  color: var(--text);
+}
+
+.icon-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
 }
 
 .day-name,
@@ -322,6 +339,6 @@ a {
   }
 
   .hero {
-    min-height: 70vh;
+    min-height: 54vh;
   }
 }
