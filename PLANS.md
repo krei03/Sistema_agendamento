@@ -57,6 +57,8 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - Ao tentar executar `docker compose up --build`, o terminal ficou travado por tempo indeterminado.
 - Nesta execucao de 2026-05-06, `docker compose ps` tambem ficou em timeout mesmo com permissao escalada, e `docker version` ficou em timeout. Isso reforca que o bloqueio atual esta no daemon/ambiente Docker, antes da aplicacao iniciar.
 - `npm.cmd run validate` falha com `fetch failed` quando executado sem o servidor rodando; com `node backend/src/server.js` iniciado temporariamente, a validacao funcional concluiu com sucesso.
+- Nova tentativa em 2026-05-06 mostrou `Docker Desktop Service (com.docker.service)` com status `Stopped`; havia processos do Docker Desktop em execucao, mas `docker version` continuou em timeout.
+- A tentativa de `Start-Service -Name com.docker.service` falhou com erro do Windows dizendo que nao foi possivel abrir/iniciar o servico no computador local. A validacao Docker permanece bloqueada por permissao/estado do servico Docker Desktop.
 
 ## Decision Log
 
@@ -96,6 +98,8 @@ Validacoes executadas:
 - `docker compose up --build -d`: tentou executar; sem permissao falhou no Docker API, com permissao escalada ficou em timeout. Runtime Docker segue pendente de ambiente/daemon responsivo.
 - Nesta execucao de 2026-05-06, `docker compose config` passou novamente; `docker compose ps` e `docker version` ficaram em timeout. A validacao Docker segue pendente porque o daemon nao respondeu.
 - Nesta execucao de 2026-05-06, a validacao local foi repetida: `node --check` passou, `npm.cmd run init-db` passou, e `npm.cmd run validate` passou com servidor local temporario em `node backend/src/server.js`.
+- Nova validacao em 2026-05-06: `docker compose config` passou, `docker version` voltou a ficar em timeout, `com.docker.service` estava parado e nao iniciou via `Start-Service`. Validacao Docker runtime ainda nao pode ser marcada como concluida.
+- Nova validacao local em 2026-05-06: `npm.cmd run init-db`, `npm.cmd run validate`, `GET /health`, `HEAD /` e `HEAD /screens/home.png` passaram com servidor local temporario; `node --check` tambem passou em todos os arquivos JS.
 
 Resultado: o codigo, a configuracao, a reorganizacao e a validacao local com MySQL foram entregues. A comprovacao runtime Docker depende de executar em um ambiente onde o Docker daemon responda sem timeout.
 
@@ -191,6 +195,7 @@ Arquivos alterados nesta execucao:
 - `frontend/public/styles.css`
 - Movidos: `src/` para `backend/src/`, `scripts/` para `backend/scripts/`, `database/` para `backend/database/`, `public/` para `frontend/public/`, `screens/` para `frontend/screens/`.
 - Atualizado em 2026-05-06: `PLANS.md` para registrar nova tentativa de validacao Docker, validacoes locais repetidas e bloqueio no daemon.
+- Atualizado em 2026-05-06: `PLANS.md` para registrar status parado do `com.docker.service`, falha ao iniciar o servico, nova validacao local e permanencia do item Docker como pendente.
 
 Comandos executados nesta execucao:
 
@@ -226,12 +231,21 @@ Comandos executados nesta execucao:
 - `npm.cmd run validate` (falhou sem servidor rodando: `fetch failed`)
 - Servidor local com `node backend/src/server.js`, `npm.cmd run validate` e `curl.exe` para `/health`, `/` e `/screens/home.png`
 - `docker version` com permissao escalada (timeout)
+- `docker version` (timeout)
+- `docker compose config`
+- `docker version` com permissao escalada (timeout)
+- `Get-Service | Where-Object { $_.Name -like '*docker*' -or $_.DisplayName -like '*Docker*' } | Select-Object Name, DisplayName, Status, StartType`
+- `Get-Process | Where-Object { $_.ProcessName -like '*docker*' -or $_.ProcessName -like '*com.docker*' } | Select-Object ProcessName, Id, Responding`
+- `Start-Service -Name com.docker.service; Start-Sleep -Seconds 5; Get-Service -Name com.docker.service | Select-Object Name, Status, StartType` (falhou ao iniciar o servico)
+- Servidor local com `node backend/src/server.js`, `npm.cmd run init-db`, `npm.cmd run validate` e `curl.exe` para `/health`, `/` e `/screens/home.png`
+- `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
 
 Observacoes:
 
 - O uso de `npm.cmd` e necessario neste PowerShell quando a Execution Policy bloqueia `npm.ps1`.
 - A validacao Docker nao foi concluida por timeout/acesso ao daemon, apesar do Compose estar sintaticamente valido.
 - O item "Validar runtime Docker completo" nao deve ser marcado como concluido ate `docker compose up --build` subir `mysql` e `app`, e `/health` responder dentro do container/app publicado.
+- Antes da proxima tentativa Docker, e necessario iniciar o Docker Desktop Service com permissao adequada ou reiniciar o Docker Desktop ate `docker version` responder sem timeout.
 
 ## Interfaces and Dependencies
 
