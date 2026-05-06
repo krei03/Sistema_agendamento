@@ -54,6 +54,9 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - O MySQL local passou a aceitar as credenciais do `.env`, permitindo `npm.cmd run init-db` e `npm.cmd run validate` com sucesso.
 - A validacao funcional original criava um barbeiro novo, mas o agendamento publico e vinculado ao primeiro barbeiro cadastrado. O script foi ajustado para validar a agenda do admin seedado.
 - `docker compose config` validou o Compose, mas `docker compose up --build -d` nao concluiu: primeiro houve bloqueio de permissao no Docker API e, com permissao escalada, os comandos Docker ficaram em timeout.
+- Ao tentar executar `docker compose up --build`, o terminal ficou travado por tempo indeterminado.
+- Nesta execucao de 2026-05-06, `docker compose ps` tambem ficou em timeout mesmo com permissao escalada, e `docker version` ficou em timeout. Isso reforca que o bloqueio atual esta no daemon/ambiente Docker, antes da aplicacao iniciar.
+- `npm.cmd run validate` falha com `fetch failed` quando executado sem o servidor rodando; com `node backend/src/server.js` iniciado temporariamente, a validacao funcional concluiu com sucesso.
 
 ## Decision Log
 
@@ -91,6 +94,8 @@ Validacoes executadas:
 - `npm.cmd run validate`: passou nesta execucao apos ajuste do script ao barbeiro admin seedado.
 - `docker compose config`: passou, com aviso de acesso ao `C:\Users\kakar\.docker\config.json`.
 - `docker compose up --build -d`: tentou executar; sem permissao falhou no Docker API, com permissao escalada ficou em timeout. Runtime Docker segue pendente de ambiente/daemon responsivo.
+- Nesta execucao de 2026-05-06, `docker compose config` passou novamente; `docker compose ps` e `docker version` ficaram em timeout. A validacao Docker segue pendente porque o daemon nao respondeu.
+- Nesta execucao de 2026-05-06, a validacao local foi repetida: `node --check` passou, `npm.cmd run init-db` passou, e `npm.cmd run validate` passou com servidor local temporario em `node backend/src/server.js`.
 
 Resultado: o codigo, a configuracao, a reorganizacao e a validacao local com MySQL foram entregues. A comprovacao runtime Docker depende de executar em um ambiente onde o Docker daemon responda sem timeout.
 
@@ -185,6 +190,7 @@ Arquivos alterados nesta execucao:
 - `frontend/public/landing.js`
 - `frontend/public/styles.css`
 - Movidos: `src/` para `backend/src/`, `scripts/` para `backend/scripts/`, `database/` para `backend/database/`, `public/` para `frontend/public/`, `screens/` para `frontend/screens/`.
+- Atualizado em 2026-05-06: `PLANS.md` para registrar nova tentativa de validacao Docker, validacoes locais repetidas e bloqueio no daemon.
 
 Comandos executados nesta execucao:
 
@@ -208,11 +214,24 @@ Comandos executados nesta execucao:
 - `docker compose up --build -d`
 - `docker compose ps`
 - `docker compose logs --tail=80`
+- `git diff -- PLANS.md`
+- `Get-Content -Raw -LiteralPath package.json`
+- `Get-Content -Raw -LiteralPath docker-compose.yml`
+- `Get-Content -Raw -LiteralPath README.md`
+- `docker compose config`
+- `docker compose ps` (timeout)
+- `docker compose ps` com permissao escalada (timeout)
+- `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
+- `npm.cmd run init-db`
+- `npm.cmd run validate` (falhou sem servidor rodando: `fetch failed`)
+- Servidor local com `node backend/src/server.js`, `npm.cmd run validate` e `curl.exe` para `/health`, `/` e `/screens/home.png`
+- `docker version` com permissao escalada (timeout)
 
 Observacoes:
 
 - O uso de `npm.cmd` e necessario neste PowerShell quando a Execution Policy bloqueia `npm.ps1`.
 - A validacao Docker nao foi concluida por timeout/acesso ao daemon, apesar do Compose estar sintaticamente valido.
+- O item "Validar runtime Docker completo" nao deve ser marcado como concluido ate `docker compose up --build` subir `mysql` e `app`, e `/health` responder dentro do container/app publicado.
 
 ## Interfaces and Dependencies
 
