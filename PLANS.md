@@ -43,6 +43,7 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - [x] Melhorar README.md com informacoes de como rodar via Docker.
 - [x] Corrigir erro ao rodar `docker compose` causado por conflito da porta local `3306`.
 - [x] Validar runtime Docker completo em ambiente onde o Docker daemon responda sem timeout.
+- [x] Corrigir hero na landing page.
 
 ## Surprises & Discoveries
 
@@ -63,6 +64,8 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - Em 2026-05-07, o erro real do Compose era conflito de porta: o MySQL do Docker tentava publicar `3306:3306` enquanto ja havia outro servico usando `3306` no host.
 - Apos alterar a porta externa do MySQL no Compose para `MYSQL_HOST_PORT` com padrao `3307`, `docker compose up --build -d` subiu MySQL e app com sucesso.
 - `docker compose ps` ainda exige permissao elevada neste ambiente por acesso negado a `C:\Users\kakar\.docker\config.json` e ao Docker API quando executado sem elevacao.
+- Em 2026-05-07, havia novos assets em `frontend/assets`: `hero.avif` e `logo-vieira.png`; o plano passou a pedir o uso deles no hero da landing.
+- A ferramenta local de visualizacao de imagem nao conseguiu abrir o `hero.avif`, mas o Express serviu o arquivo corretamente como `image/avif` e o navegador podera carrega-lo pela rota `/assets/hero.avif`.
 
 ## Decision Log
 
@@ -78,6 +81,8 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - Manter o agendamento publico vinculado ao primeiro barbeiro cadastrado neste escopo de barbearia simples; por isso o seed `admin` e o responsavel pela agenda publica.
 - Remover o bloco de chamada do banner da landing para atender ao pedido de nao exibir texto sobre a imagem, mantendo a marca apenas na navegacao.
 - Resolver o conflito de porta do MySQL no Docker publicando o container em `localhost:${MYSQL_HOST_PORT:-3307}` e mantendo `3306` apenas dentro da rede Docker; assim o app continua usando `DB_HOST=mysql` e `DB_PORT=3306`.
+- Servir `frontend/assets` pela rota estatica `/assets` para disponibilizar imagens finais da marca sem misturar assets de produto com imagens de referencia em `/screens`.
+- Recriar o hero da landing com `hero.avif` como imagem de fundo e `logo-vieira.png` como marca, mantendo chamadas e botoes diretamente sobre o hero.
 
 ## Outcomes & Retrospective
 
@@ -93,6 +98,7 @@ Implementacao concluida no repositorio:
 - README atualizado com estrutura do projeto e instrucoes Docker mais completas.
 - Docker ajustado para incluir `frontend/screens` no build, necessario para renderizar a imagem da landing.
 - Docker validado em 2026-05-07 apos trocar a porta publicada do MySQL para `3307`.
+- Hero da landing atualizado em 2026-05-07 com imagem `frontend/assets/hero.avif`, logo `frontend/assets/logo-vieira.png`, texto principal e botoes sobrepostos.
 
 Validacoes executadas:
 
@@ -110,6 +116,10 @@ Validacoes executadas:
 - Em 2026-05-07, `docker compose up --build -d` passou com permissao elevada; `mysql` ficou `healthy` e `app` ficou `Up`.
 - Em 2026-05-07, `GET /health`, `HEAD /`, `HEAD /login.html`, `HEAD /register.html`, `HEAD /dashboard.html` e `HEAD /screens/home.png` retornaram `200` no app publicado em `localhost:3000`.
 - Em 2026-05-07, `npm.cmd run validate` passou contra o app em execucao no Docker.
+- Em 2026-05-07, apos o ajuste do hero, `node --check` passou em todos os arquivos JS.
+- Em 2026-05-07, apos rebuild do Docker, `docker compose ps` mostrou `app` em `localhost:3000` e `mysql` saudavel em `localhost:3307`.
+- Em 2026-05-07, `GET /health` retornou `{"status":"ok"}` e `HEAD /`, `/assets/hero.avif`, `/assets/logo-vieira.png`, `/login.html`, `/register.html` e `/dashboard.html` retornaram `200`.
+- Em 2026-05-07, `npm.cmd run validate` passou novamente contra o app Docker atualizado.
 
 Resultado: o codigo, a configuracao, a reorganizacao, a validacao local com MySQL e a validacao runtime Docker foram entregues.
 
@@ -140,6 +150,7 @@ Essas imagens devem servir como base visual para as telas.
 10. Configurar o ambiente para rodar o projeto inteiro no Docker.
 11. Quando o Docker daemon estiver responsivo, validar frontend, backend e projeto completo via Compose.
 12. Conferir erro do Docker e ajustar a porta publicada do MySQL para nao conflitar com servico local.
+13. Corrigir banner/hero principal da landing page.
 
 ## Concrete Steps
 
@@ -162,6 +173,8 @@ Essas imagens devem servir como base visual para as telas.
 8. Executar instalacao de dependencias, inicializacao de banco, validacao API e validacao Docker.
 9. Atualizar `README.md` e marcar cada item concluido no `Progress`.
 10. Corrigir erro de porta ocupada no Docker alterando o mapeamento do MySQL de `3306:3306` para `${MYSQL_HOST_PORT:-3307}:3306`.
+11. Remover o hero atual e substituir pelas imagens dentro de: `frontend/assets/hero.avif` e `frontend/assets/logo-vieira.png`.
+12. Criar textos e botoes por cima do hero.
 
 ## Validation and Acceptance
 
@@ -181,6 +194,7 @@ O trabalho sera aceito quando:
 - Testar backend no Docker.
 - Testar o projeto inteiro no Docker.
 - O erro de porta ocupada em `3306` deve estar corrigido sem exigir que o MySQL local seja parado.
+- O hero da landing deve usar `frontend/assets/hero.avif` e `frontend/assets/logo-vieira.png`, com texto e botoes sobrepostos e responsivos.
 
 ## Idempotence and Recovery
 
@@ -214,6 +228,12 @@ Arquivos alterados nesta execucao:
 - Atualizado em 2026-05-07: `README.md` com explicacao da porta externa do MySQL no Docker.
 - Atualizado em 2026-05-07: `PLANS.md` com a correcao do Docker, validacoes executadas e fechamento das pendencias.
 - Commit criado em 2026-05-07: `fix: evita conflito de porta no docker compose`.
+- Atualizado em 2026-05-07: `backend/src/server.js` para servir `frontend/assets` em `/assets`.
+- Atualizado em 2026-05-07: `frontend/public/index.html` com novo hero, logo, texto e botoes.
+- Atualizado em 2026-05-07: `frontend/public/styles.css` com layout responsivo do novo hero.
+- Adicionados em 2026-05-07: `frontend/assets/hero.avif` e `frontend/assets/logo-vieira.png`.
+- Atualizado em 2026-05-07: `PLANS.md` para registrar a correcao do hero, validacoes e fechamento da pendencia.
+- Commit criado em 2026-05-07: `feat: atualiza hero da landing`.
 
 Comandos executados nesta execucao:
 
@@ -288,6 +308,28 @@ Comandos executados nesta execucao:
 - `Start-Service -Name com.docker.service; Start-Sleep -Seconds 5; Get-Service -Name com.docker.service | Select-Object Name, Status, StartType` (falhou ao iniciar o servico)
 - Servidor local com `node backend/src/server.js`, `npm.cmd run init-db`, `npm.cmd run validate` e `curl.exe` para `/health`, `/` e `/screens/home.png`
 - `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
+- `Get-Content -LiteralPath PLANS.md -Raw`
+- `git status --short`
+- `rg --files`
+- `Get-Content -LiteralPath frontend\public\index.html -Raw`
+- `Get-Content -LiteralPath frontend\public\styles.css -Raw`
+- `Get-Content -LiteralPath frontend\public\landing.js -Raw`
+- `Get-ChildItem -LiteralPath frontend\assets | Select-Object Name, Length`
+- Visualizacao local de `frontend\assets\logo-vieira.png`
+- Tentativa de visualizacao local de `frontend\assets\hero.avif` (falhou por formato AVIF nao suportado pela ferramenta)
+- `Get-Content -LiteralPath backend\src\server.js -Raw`
+- `Get-Content -LiteralPath .dockerignore -Raw`
+- `git diff -- PLANS.md`
+- `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
+- `docker compose config`
+- `docker compose up --build -d`
+- `docker compose ps`
+- `curl.exe -s -i http://127.0.0.1:3000/health`
+- `curl.exe -s -I` para `/`, `/assets/hero.avif`, `/assets/logo-vieira.png`, `/login.html`, `/register.html` e `/dashboard.html`
+- `npm.cmd run validate`
+- `git diff --check`
+- `git add .`
+- `git commit -m "feat: atualiza hero da landing"`
 
 Observacoes:
 

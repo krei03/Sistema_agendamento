@@ -13,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
 app.use('/screens', express.static(path.join(__dirname, '..', '..', 'frontend', 'screens')));
+app.use('/assets', express.static(path.join(__dirname, '..', '..', 'frontend', 'assets')));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
