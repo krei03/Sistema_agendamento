@@ -27,8 +27,14 @@ docker compose up --build
 
 O Compose sobe dois servicos:
 
-- `mysql`: MySQL 8.4 com banco `barber_schedule`.
+- `mysql`: MySQL 8.4 com banco `barber_schedule`, publicado por padrao em `localhost:3307` para evitar conflito com MySQL local na porta `3306`.
 - `app`: Node.js na porta `3000`, executando `npm run init-db` antes de iniciar o servidor.
+
+Se quiser usar outra porta externa para o MySQL do Docker, ajuste `MYSQL_HOST_PORT` no ambiente antes de subir:
+
+```bash
+MYSQL_HOST_PORT=3308 docker compose up --build
+```
 
 Depois acesse no navegador:
 

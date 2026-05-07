@@ -41,7 +41,8 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - [x] Melhorar estrutura do projeto separando frontend e backend por pastas.
 - [x] Ajustar Docker para rodar o projeto com a nova estrutura e incluir imagens da landing no build.
 - [x] Melhorar README.md com informacoes de como rodar via Docker.
-- [ ] Validar runtime Docker completo em ambiente onde o Docker daemon responda sem timeout.
+- [x] Corrigir erro ao rodar `docker compose` causado por conflito da porta local `3306`.
+- [x] Validar runtime Docker completo em ambiente onde o Docker daemon responda sem timeout.
 
 ## Surprises & Discoveries
 
@@ -59,6 +60,9 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - `npm.cmd run validate` falha com `fetch failed` quando executado sem o servidor rodando; com `node backend/src/server.js` iniciado temporariamente, a validacao funcional concluiu com sucesso.
 - Nova tentativa em 2026-05-06 mostrou `Docker Desktop Service (com.docker.service)` com status `Stopped`; havia processos do Docker Desktop em execucao, mas `docker version` continuou em timeout.
 - A tentativa de `Start-Service -Name com.docker.service` falhou com erro do Windows dizendo que nao foi possivel abrir/iniciar o servico no computador local. A validacao Docker permanece bloqueada por permissao/estado do servico Docker Desktop.
+- Em 2026-05-07, o erro real do Compose era conflito de porta: o MySQL do Docker tentava publicar `3306:3306` enquanto ja havia outro servico usando `3306` no host.
+- Apos alterar a porta externa do MySQL no Compose para `MYSQL_HOST_PORT` com padrao `3307`, `docker compose up --build -d` subiu MySQL e app com sucesso.
+- `docker compose ps` ainda exige permissao elevada neste ambiente por acesso negado a `C:\Users\kakar\.docker\config.json` e ao Docker API quando executado sem elevacao.
 
 ## Decision Log
 
@@ -73,6 +77,7 @@ O visual deve seguir as referencias da pasta `frontend/screens`: fundo escuro, d
 - Separar a aplicacao em `backend/` e `frontend/`, mantendo `package.json` na raiz para preservar comandos simples.
 - Manter o agendamento publico vinculado ao primeiro barbeiro cadastrado neste escopo de barbearia simples; por isso o seed `admin` e o responsavel pela agenda publica.
 - Remover o bloco de chamada do banner da landing para atender ao pedido de nao exibir texto sobre a imagem, mantendo a marca apenas na navegacao.
+- Resolver o conflito de porta do MySQL no Docker publicando o container em `localhost:${MYSQL_HOST_PORT:-3307}` e mantendo `3306` apenas dentro da rede Docker; assim o app continua usando `DB_HOST=mysql` e `DB_PORT=3306`.
 
 ## Outcomes & Retrospective
 
@@ -87,6 +92,7 @@ Implementacao concluida no repositorio:
 - Landing atualizada com banner sem texto sobreposto e calendario navegavel por mes.
 - README atualizado com estrutura do projeto e instrucoes Docker mais completas.
 - Docker ajustado para incluir `frontend/screens` no build, necessario para renderizar a imagem da landing.
+- Docker validado em 2026-05-07 apos trocar a porta publicada do MySQL para `3307`.
 
 Validacoes executadas:
 
@@ -100,8 +106,12 @@ Validacoes executadas:
 - Nesta execucao de 2026-05-06, a validacao local foi repetida: `node --check` passou, `npm.cmd run init-db` passou, e `npm.cmd run validate` passou com servidor local temporario em `node backend/src/server.js`.
 - Nova validacao em 2026-05-06: `docker compose config` passou, `docker version` voltou a ficar em timeout, `com.docker.service` estava parado e nao iniciou via `Start-Service`. Validacao Docker runtime ainda nao pode ser marcada como concluida.
 - Nova validacao local em 2026-05-06: `npm.cmd run init-db`, `npm.cmd run validate`, `GET /health`, `HEAD /` e `HEAD /screens/home.png` passaram com servidor local temporario; `node --check` tambem passou em todos os arquivos JS.
+- Em 2026-05-07, `docker compose config` passou e confirmou `mysql` publicado em `3307`.
+- Em 2026-05-07, `docker compose up --build -d` passou com permissao elevada; `mysql` ficou `healthy` e `app` ficou `Up`.
+- Em 2026-05-07, `GET /health`, `HEAD /`, `HEAD /login.html`, `HEAD /register.html`, `HEAD /dashboard.html` e `HEAD /screens/home.png` retornaram `200` no app publicado em `localhost:3000`.
+- Em 2026-05-07, `npm.cmd run validate` passou contra o app em execucao no Docker.
 
-Resultado: o codigo, a configuracao, a reorganizacao e a validacao local com MySQL foram entregues. A comprovacao runtime Docker depende de executar em um ambiente onde o Docker daemon responda sem timeout.
+Resultado: o codigo, a configuracao, a reorganizacao, a validacao local com MySQL e a validacao runtime Docker foram entregues.
 
 ## Context and Orientation
 
@@ -129,6 +139,7 @@ Essas imagens devem servir como base visual para as telas.
 9. Separar frontend e backend por pastas buscando deixar o projeto mais profissional.
 10. Configurar o ambiente para rodar o projeto inteiro no Docker.
 11. Quando o Docker daemon estiver responsivo, validar frontend, backend e projeto completo via Compose.
+12. Conferir erro do Docker e ajustar a porta publicada do MySQL para nao conflitar com servico local.
 
 ## Concrete Steps
 
@@ -150,6 +161,7 @@ Essas imagens devem servir como base visual para as telas.
 7. Criar script de validacao funcional em `backend/scripts/validate-api.js`.
 8. Executar instalacao de dependencias, inicializacao de banco, validacao API e validacao Docker.
 9. Atualizar `README.md` e marcar cada item concluido no `Progress`.
+10. Corrigir erro de porta ocupada no Docker alterando o mapeamento do MySQL de `3306:3306` para `${MYSQL_HOST_PORT:-3307}:3306`.
 
 ## Validation and Acceptance
 
@@ -168,6 +180,7 @@ O trabalho sera aceito quando:
 - Testar frontend no Docker.
 - Testar backend no Docker.
 - Testar o projeto inteiro no Docker.
+- O erro de porta ocupada em `3306` deve estar corrigido sem exigir que o MySQL local seja parado.
 
 ## Idempotence and Recovery
 
@@ -196,6 +209,11 @@ Arquivos alterados nesta execucao:
 - Movidos: `src/` para `backend/src/`, `scripts/` para `backend/scripts/`, `database/` para `backend/database/`, `public/` para `frontend/public/`, `screens/` para `frontend/screens/`.
 - Atualizado em 2026-05-06: `PLANS.md` para registrar nova tentativa de validacao Docker, validacoes locais repetidas e bloqueio no daemon.
 - Atualizado em 2026-05-06: `PLANS.md` para registrar status parado do `com.docker.service`, falha ao iniciar o servico, nova validacao local e permanencia do item Docker como pendente.
+- Atualizado em 2026-05-07: `docker-compose.yml` para publicar MySQL em `${MYSQL_HOST_PORT:-3307}:3306`.
+- Atualizado em 2026-05-07: `.env.example` com `MYSQL_HOST_PORT=3307`.
+- Atualizado em 2026-05-07: `README.md` com explicacao da porta externa do MySQL no Docker.
+- Atualizado em 2026-05-07: `PLANS.md` com a correcao do Docker, validacoes executadas e fechamento das pendencias.
+- Commit criado em 2026-05-07: `fix: evita conflito de porta no docker compose`.
 
 Comandos executados nesta execucao:
 
@@ -211,6 +229,37 @@ Comandos executados nesta execucao:
 - `Move-Item` para reorganizar backend e frontend
 - `rg "src/|src\\|public/|public\\|database/|database\\|scripts/|scripts\\" -n . -g "!node_modules/**" -g "!package-lock.json"`
 - `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
+- `Get-Content -LiteralPath PLANS.md -Raw`
+- `git status --short`
+- `rg --files`
+- `Get-Content -LiteralPath docker-compose.yml -Raw`
+- `Get-Content -LiteralPath .env.example -Raw`
+- `Get-Content -LiteralPath package.json -Raw`
+- `Get-Content -LiteralPath backend\src\config.js -Raw`
+- `Select-String -Path README.md -Pattern "Docker|docker|3306|3000" -Context 2,3`
+- `Get-Content -LiteralPath Dockerfile -Raw`
+- `Get-Content -LiteralPath .env -Raw`
+- `git diff -- PLANS.md`
+- `Get-Content -LiteralPath README.md -Raw`
+- `git diff -- docker-compose.yml .env.example README.md PLANS.md`
+- `docker compose config`
+- `Get-ChildItem -Recurse -Filter *.js -Path .\backend, .\frontend | ForEach-Object { node --check $_.FullName }`
+- `docker compose up --build -d`
+- Servidor local temporario com `node backend/src/server.js`, `npm.cmd run init-db`, `npm.cmd run validate` e `curl.exe` para `/health`, `/` e `/screens/home.png`
+- `docker compose up --build -d` com permissao elevada
+- `docker compose ps`
+- `docker compose logs --tail=80`
+- `curl.exe -s -i http://127.0.0.1:3000/health`
+- `curl.exe -s -I` para `/`, `/login.html`, `/register.html`, `/dashboard.html` e `/screens/home.png`
+- `docker compose ps` com permissao elevada
+- `docker compose logs --tail=80` com permissao elevada
+- `npm.cmd run validate`
+- `git diff --check`
+- `git diff --stat`
+- `Select-String -Path PLANS.md -Pattern "\[ \]"`
+- `Select-String -Path PLANS.md -Pattern "docker n|docker não|nao funciona|corregir|composer|ouve|pendente|timeout" -CaseSensitive:$false`
+- `git add .`
+- `git commit -m "fix: evita conflito de porta no docker compose"`
 - Servidor local com `node backend/src/server.js` e `curl.exe` para `/health`, `/` e `/screens/home.png`
 - `npm run init-db` (bloqueado pela Execution Policy)
 - `npm.cmd run init-db`
@@ -243,9 +292,8 @@ Comandos executados nesta execucao:
 Observacoes:
 
 - O uso de `npm.cmd` e necessario neste PowerShell quando a Execution Policy bloqueia `npm.ps1`.
-- A validacao Docker nao foi concluida por timeout/acesso ao daemon, apesar do Compose estar sintaticamente valido.
-- O item "Validar runtime Docker completo" nao deve ser marcado como concluido ate `docker compose up --build` subir `mysql` e `app`, e `/health` responder dentro do container/app publicado.
-- Antes da proxima tentativa Docker, e necessario iniciar o Docker Desktop Service com permissao adequada ou reiniciar o Docker Desktop ate `docker version` responder sem timeout.
+- A validacao Docker foi concluida em 2026-05-07 com permissao elevada para acessar o Docker daemon.
+- Os containers ficaram em execucao ao final da validacao: `app` em `localhost:3000` e `mysql` em `localhost:3307`.
 
 ## Interfaces and Dependencies
 
