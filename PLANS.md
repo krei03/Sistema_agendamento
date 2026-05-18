@@ -151,6 +151,7 @@ Essas imagens devem servir como base visual para as telas.
 11. Quando o Docker daemon estiver responsivo, validar frontend, backend e projeto completo via Compose.
 12. Conferir erro do Docker e ajustar a porta publicada do MySQL para nao conflitar com servico local.
 13. Corrigir banner/hero principal da landing page.
+14. O hero tem que estar igual na pastas screens porem usar as imagens original na pastas assets
 
 ## Concrete Steps
 
