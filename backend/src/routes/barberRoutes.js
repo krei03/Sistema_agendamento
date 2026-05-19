@@ -130,6 +130,26 @@ router.patch('/appointments/:id/status', async (req, res, next) => {
       return res.status(400).json({ error: 'Status invalido.' });
     }
 
+    if (status === 'confirmed') {
+      const conflicting = await query(
+        `SELECT confirmed.id
+           FROM appointments target
+           JOIN appointments confirmed
+             ON confirmed.barber_id = target.barber_id
+            AND confirmed.appointment_date = target.appointment_date
+            AND confirmed.appointment_time = target.appointment_time
+            AND confirmed.status = 'confirmed'
+            AND confirmed.id <> target.id
+          WHERE target.id = ? AND target.barber_id = ?
+          LIMIT 1`,
+        [appointmentId, req.barber.id]
+      );
+
+      if (conflicting.length) {
+        return res.status(409).json({ error: 'Ja existe um agendamento confirmado neste horario.' });
+      }
+    }
+
     const result = await query(
       'UPDATE appointments SET status = ? WHERE id = ? AND barber_id = ?',
       [status, appointmentId, req.barber.id]

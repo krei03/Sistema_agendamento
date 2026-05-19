@@ -43,5 +43,5 @@ CREATE TABLE IF NOT EXISTS appointments (
   CONSTRAINT fk_appointments_barber FOREIGN KEY (barber_id) REFERENCES barbers(id),
   CONSTRAINT fk_appointments_service FOREIGN KEY (service_id) REFERENCES services(id),
   INDEX idx_appointments_barber_date (barber_id, appointment_date),
-  UNIQUE KEY uq_appointment_slot (barber_id, appointment_date, appointment_time)
+  INDEX idx_appointments_slot (barber_id, appointment_date, appointment_time)
 );

@@ -23,10 +23,31 @@ async function request(path, options = {}) {
   return body;
 }
 
+async function requestExpectingError(path, expectedStatus, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+
+  const body = await response.json().catch(() => ({}));
+  assert(
+    response.status === expectedStatus,
+    `${options.method || 'GET'} ${path} deveria retornar ${expectedStatus}, mas retornou ${response.status}.`
+  );
+
+  return body;
+}
+
 function futureDate(daysAhead) {
   const date = new Date();
   date.setDate(date.getDate() + daysAhead);
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 async function main() {
@@ -96,6 +117,25 @@ async function main() {
   });
   assert(appointment.appointment.id, 'Agendamento nao retornou id.');
 
+  const pendingAvailability = await request(`/api/availability?serviceId=${services.services[0].id}&date=${date}`);
+  assert(
+    pendingAvailability.slots.includes(availability.slots[0]),
+    'Horario pendente nao deveria bloquear a disponibilidade publica.'
+  );
+
+  const secondAppointment = await request('/api/appointments', {
+    method: 'POST',
+    body: JSON.stringify({
+      serviceId: services.services[0].id,
+      customerName: 'Cliente Pendente Concorrente',
+      customerPhone: '(11) 97777-0000',
+      date,
+      time: availability.slots[0],
+      notes: 'Validacao de disponibilidade pending'
+    })
+  });
+  assert(secondAppointment.appointment.id, 'Segundo agendamento pendente nao retornou id.');
+
   const adminLogin = await request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ username: 'admin', password: 'admin123' })
@@ -114,12 +154,43 @@ async function main() {
   });
   assert(confirmed.appointment.status === 'confirmed', 'Agendamento nao foi confirmado.');
 
+  const confirmedAvailability = await request(`/api/availability?serviceId=${services.services[0].id}&date=${date}`);
+  assert(
+    !confirmedAvailability.slots.includes(availability.slots[0]),
+    'Horario confirmado deveria bloquear a disponibilidade publica.'
+  );
+
+  await requestExpectingError(`/api/barber/appointments/${secondAppointment.appointment.id}/status`, 409, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${adminLogin.token}` },
+    body: JSON.stringify({ status: 'confirmed' })
+  });
+
   const completed = await request(`/api/barber/appointments/${appointment.appointment.id}/status`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${adminLogin.token}` },
     body: JSON.stringify({ status: 'completed' })
   });
   assert(completed.appointment.status === 'completed', 'Agendamento nao foi concluido.');
+
+  const completedAvailability = await request(`/api/availability?serviceId=${services.services[0].id}&date=${date}`);
+  assert(
+    completedAvailability.slots.includes(availability.slots[0]),
+    'Horario concluido deveria voltar para a disponibilidade publica.'
+  );
+
+  const rejected = await request(`/api/barber/appointments/${secondAppointment.appointment.id}/status`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${adminLogin.token}` },
+    body: JSON.stringify({ status: 'rejected' })
+  });
+  assert(rejected.appointment.status === 'rejected', 'Agendamento nao foi negado.');
+
+  const rejectedAvailability = await request(`/api/availability?serviceId=${services.services[0].id}&date=${date}`);
+  assert(
+    rejectedAvailability.slots.includes(availability.slots[0]),
+    'Horario negado deveria permanecer disponivel no calendario publico.'
+  );
 
   const cleared = await request('/api/barber/appointments', {
     method: 'DELETE',

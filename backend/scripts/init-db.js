@@ -87,6 +87,34 @@ async function migrate(connection) {
   await connection.query(
     "ALTER TABLE appointments MODIFY status ENUM('pending', 'confirmed', 'rejected', 'completed') NOT NULL DEFAULT 'pending'"
   );
+
+  const [uniqueSlotIndexes] = await connection.query(
+    `SELECT INDEX_NAME
+       FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'appointments'
+        AND INDEX_NAME = 'uq_appointment_slot'
+      LIMIT 1`
+  );
+
+  if (uniqueSlotIndexes.length) {
+    await connection.query('ALTER TABLE appointments DROP INDEX uq_appointment_slot');
+  }
+
+  const [slotIndexes] = await connection.query(
+    `SELECT INDEX_NAME
+       FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'appointments'
+        AND INDEX_NAME = 'idx_appointments_slot'
+      LIMIT 1`
+  );
+
+  if (!slotIndexes.length) {
+    await connection.query(
+      'ALTER TABLE appointments ADD INDEX idx_appointments_slot (barber_id, appointment_date, appointment_time)'
+    );
+  }
 }
 
 async function main() {
