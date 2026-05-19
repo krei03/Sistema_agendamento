@@ -11,7 +11,7 @@ const API = {
 
   logout() {
     localStorage.removeItem(this.tokenKey);
-    window.location.href = '/login.html';
+    window.location.href = '/acesso-vieira';
   },
 
   async request(path, options = {}) {

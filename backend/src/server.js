@@ -7,10 +7,20 @@ const barberRoutes = require('./routes/barberRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
+const adminLoginPath = '/acesso-vieira';
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get(adminLoginPath, (req, res) => {
+  res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'public', 'login.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.status(404).json({ error: 'Rota nao encontrada.' });
+});
+
 app.use(express.static(path.join(__dirname, '..', '..', 'frontend', 'public')));
 app.use('/screens', express.static(path.join(__dirname, '..', '..', 'frontend', 'screens')));
 app.use('/assets', express.static(path.join(__dirname, '..', '..', 'frontend', 'assets')));

@@ -3,3 +3,7 @@ node_modules/
 *.log
 server.out.log
 server.err.log
+tmp/
+responsive-*.png
+.chrome-headless*/
+.edge-headless*/

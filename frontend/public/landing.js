@@ -171,8 +171,7 @@ appointmentForm.addEventListener('submit', async (event) => {
         date: state.selectedDate,
         time: state.selectedSlot,
         customerName: document.querySelector('#customerName').value,
-        customerPhone: document.querySelector('#customerPhone').value,
-        customerEmail: document.querySelector('#customerEmail').value
+        customerPhone: document.querySelector('#customerPhone').value
       })
     });
     appointmentForm.reset();

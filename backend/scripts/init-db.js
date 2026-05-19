@@ -70,11 +70,22 @@ async function seed(connection) {
       'Administrador',
       'admin',
       'admin@vieirabarbearia.com.br',
-      '(11) 98765-4321',
+      '(13)99206-0409',
       'Vieira Barbearia',
-      'Rua Principal, 123 - Centro, Sao Paulo - SP',
+      'Borges de Medeiros 238',
       passwordHash
     ]
+  );
+}
+
+async function migrate(connection) {
+  await connection.query(`USE \`${config.db.database}\``);
+  await connection.query(
+    "ALTER TABLE appointments MODIFY status ENUM('pending', 'confirmed', 'cancelled', 'rejected', 'completed') NOT NULL DEFAULT 'pending'"
+  );
+  await connection.query("UPDATE appointments SET status = 'rejected' WHERE status = 'cancelled'");
+  await connection.query(
+    "ALTER TABLE appointments MODIFY status ENUM('pending', 'confirmed', 'rejected', 'completed') NOT NULL DEFAULT 'pending'"
   );
 }
 
@@ -84,6 +95,7 @@ async function main() {
 
   try {
     await connection.query(schema.replaceAll('barber_schedule', config.db.database));
+    await migrate(connection);
     await seed(connection);
     console.log('Banco inicializado com sucesso.');
   } finally {

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS barbers (
   email VARCHAR(160) NOT NULL UNIQUE,
   phone VARCHAR(40) NOT NULL,
   shop_name VARCHAR(120) NOT NULL DEFAULT 'Vieira Barbearia',
-  address VARCHAR(220) NOT NULL DEFAULT 'Rua Principal, 123 - Centro, Sao Paulo - SP',
+  address VARCHAR(220) NOT NULL DEFAULT 'Borges de Medeiros 238',
   password_hash VARCHAR(255) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   customer_email VARCHAR(160) NULL,
   appointment_date DATE NOT NULL,
   appointment_time TIME NOT NULL,
-  status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+  status ENUM('pending', 'confirmed', 'rejected', 'completed') NOT NULL DEFAULT 'pending',
   notes VARCHAR(500) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -4,6 +4,7 @@ const { requireAuth } = require('../auth');
 const { clean, isEmail, validateRequired } = require('../validators');
 
 const router = express.Router();
+const VALID_APPOINTMENT_STATUSES = ['pending', 'confirmed', 'rejected', 'completed'];
 
 function publicBarber(row) {
   return {
@@ -94,6 +95,76 @@ router.get('/appointments', async (req, res, next) => {
         durationMinutes: row.duration_minutes,
         priceCents: row.price_cents
       }))
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.delete('/appointments', async (req, res, next) => {
+  try {
+    const result = await query(
+      'DELETE FROM appointments WHERE barber_id = ?',
+      [req.barber.id]
+    );
+
+    return res.json({
+      deleted: result.affectedRows,
+      message: 'Agenda limpa com sucesso.'
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.patch('/appointments/:id/status', async (req, res, next) => {
+  try {
+    const appointmentId = Number(req.params.id);
+    const status = clean(req.body.status);
+
+    if (!appointmentId) {
+      return res.status(400).json({ error: 'Agendamento invalido.' });
+    }
+
+    if (!VALID_APPOINTMENT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Status invalido.' });
+    }
+
+    const result = await query(
+      'UPDATE appointments SET status = ? WHERE id = ? AND barber_id = ?',
+      [status, appointmentId, req.barber.id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'Agendamento nao encontrado.' });
+    }
+
+    const rows = await query(
+      `SELECT a.id, a.customer_name, a.customer_phone, a.customer_email, a.appointment_date,
+              TIME_FORMAT(a.appointment_time, '%H:%i') AS appointment_time,
+              a.status, a.notes, s.name AS service_name, s.duration_minutes, s.price_cents
+         FROM appointments a
+         JOIN services s ON s.id = a.service_id
+        WHERE a.id = ? AND a.barber_id = ?
+        LIMIT 1`,
+      [appointmentId, req.barber.id]
+    );
+
+    const row = rows[0];
+    return res.json({
+      appointment: {
+        id: row.id,
+        customerName: row.customer_name,
+        customerPhone: row.customer_phone,
+        customerEmail: row.customer_email,
+        date: row.appointment_date,
+        time: row.appointment_time,
+        status: row.status,
+        notes: row.notes,
+        serviceName: row.service_name,
+        durationMinutes: row.duration_minutes,
+        priceCents: row.price_cents
+      }
     });
   } catch (error) {
     return next(error);

@@ -39,7 +39,7 @@ MYSQL_HOST_PORT=3308 docker compose up --build
 Depois acesse no navegador:
 
 - Landing page: http://localhost:3000
-- Login admin: http://localhost:3000/login.html
+- Login admin: http://localhost:3000/acesso-vieira
 - Cadastro: http://localhost:3000/register.html
 - Dashboard: http://localhost:3000/dashboard.html
 
@@ -121,4 +121,5 @@ O script valida:
 
 O schema fica em `backend/database/schema.sql` e pode ser aplicado varias vezes com `npm run init-db`. Os seeds sao idempotentes para servicos e usuario admin.
 
-As paginas do frontend ficam em `frontend/public`, mas sao servidas pelo Express diretamente na raiz do site. Por exemplo, `frontend/public/login.html` abre em `/login.html`.
+As paginas do frontend ficam em `frontend/public`, mas sao servidas pelo Express diretamente na raiz do site. A tela de login administrativo usa a rota discreta `/acesso-vieira`; o acesso direto a `/login.html` retorna 404 para nao expor o atalho na landing publica.
+# landing-Page-advocacia-

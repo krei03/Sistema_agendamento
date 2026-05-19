@@ -26,7 +26,7 @@ router.post('/register', async (req, res, next) => {
       email: clean(req.body.email),
       phone: clean(req.body.phone),
       shopName: clean(req.body.shopName || 'Vieira Barbearia'),
-      address: clean(req.body.address || 'Rua Principal, 123 - Centro, Sao Paulo - SP'),
+      address: clean(req.body.address || 'Borges de Medeiros 238'),
       password: req.body.password
     };
 

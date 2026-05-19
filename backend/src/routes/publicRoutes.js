@@ -60,7 +60,7 @@ router.get('/availability', async (req, res, next) => {
     const booked = await query(
       `SELECT TIME_FORMAT(appointment_time, '%H:%i') AS appointment_time
          FROM appointments
-        WHERE barber_id = ? AND appointment_date = ? AND status <> 'cancelled'`,
+        WHERE barber_id = ? AND appointment_date = ? AND status IN ('pending', 'confirmed')`,
       [barbers[0].id, date]
     );
 
@@ -107,35 +107,54 @@ router.post('/appointments', async (req, res, next) => {
     }
 
     const available = await query(
-      `SELECT id FROM appointments
-        WHERE barber_id = ? AND appointment_date = ? AND appointment_time = ? AND status <> 'cancelled'
+      `SELECT id, status FROM appointments
+        WHERE barber_id = ? AND appointment_date = ? AND appointment_time = ?
         LIMIT 1`,
       [barbers[0].id, body.date, `${body.time}:00`]
     );
 
-    if (available.length) {
+    if (available.length && ['pending', 'confirmed'].includes(available[0].status)) {
       return res.status(409).json({ error: 'Horario ja solicitado.' });
     }
 
-    const result = await query(
-      `INSERT INTO appointments
-       (barber_id, service_id, customer_name, customer_phone, customer_email, appointment_date, appointment_time, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        barbers[0].id,
-        body.serviceId,
-        body.customerName,
-        body.customerPhone,
-        body.customerEmail || null,
-        body.date,
-        `${body.time}:00`,
-        body.notes || null
-      ]
-    );
+    let appointmentId;
+    if (available.length) {
+      await query(
+        `UPDATE appointments
+            SET service_id = ?, customer_name = ?, customer_phone = ?, customer_email = ?, notes = ?, status = 'pending'
+          WHERE id = ?`,
+        [
+          body.serviceId,
+          body.customerName,
+          body.customerPhone,
+          body.customerEmail || null,
+          body.notes || null,
+          available[0].id
+        ]
+      );
+      appointmentId = available[0].id;
+    } else {
+      const result = await query(
+        `INSERT INTO appointments
+         (barber_id, service_id, customer_name, customer_phone, customer_email, appointment_date, appointment_time, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          barbers[0].id,
+          body.serviceId,
+          body.customerName,
+          body.customerPhone,
+          body.customerEmail || null,
+          body.date,
+          `${body.time}:00`,
+          body.notes || null
+        ]
+      );
+      appointmentId = result.insertId;
+    }
 
     return res.status(201).json({
       appointment: {
-        id: result.insertId,
+        id: appointmentId,
         serviceId: body.serviceId,
         customerName: body.customerName,
         customerPhone: body.customerPhone,

@@ -2,3 +2,7 @@ node_modules
 .git
 .env
 *.log
+tmp
+responsive-*.png
+.chrome-headless*
+.edge-headless*

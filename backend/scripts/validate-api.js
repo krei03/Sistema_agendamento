@@ -107,6 +107,31 @@ async function main() {
   });
   assert(appointments.appointments.length > 0, 'Dashboard nao lista agendamentos.');
 
+  const confirmed = await request(`/api/barber/appointments/${appointment.appointment.id}/status`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${adminLogin.token}` },
+    body: JSON.stringify({ status: 'confirmed' })
+  });
+  assert(confirmed.appointment.status === 'confirmed', 'Agendamento nao foi confirmado.');
+
+  const completed = await request(`/api/barber/appointments/${appointment.appointment.id}/status`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${adminLogin.token}` },
+    body: JSON.stringify({ status: 'completed' })
+  });
+  assert(completed.appointment.status === 'completed', 'Agendamento nao foi concluido.');
+
+  const cleared = await request('/api/barber/appointments', {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${adminLogin.token}` }
+  });
+  assert(cleared.deleted >= 1, 'Limpeza da agenda nao removeu agendamentos.');
+
+  const emptyAppointments = await request('/api/barber/appointments', {
+    headers: { Authorization: `Bearer ${adminLogin.token}` }
+  });
+  assert(emptyAppointments.appointments.length === 0, 'Agenda nao ficou vazia apos limpeza.');
+
   console.log('Validacao funcional concluida com sucesso.');
 }
 

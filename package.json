@@ -7,7 +7,8 @@
     "start": "node backend/src/server.js",
     "dev": "node backend/src/server.js",
     "init-db": "node backend/scripts/init-db.js",
-    "validate": "node backend/scripts/validate-api.js"
+    "validate": "node backend/scripts/validate-api.js",
+    "validate:responsive": "node backend/scripts/validate-responsive.js"
   },
   "keywords": [
     "barbearia",
@@ -24,5 +25,8 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.22.3"
+  },
+  "devDependencies": {
+    "chrome-remote-interface": "^0.34.0"
   }
 }
